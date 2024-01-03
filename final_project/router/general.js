@@ -43,21 +43,15 @@ public_users.get('/1', function (req, res) {
     });
 });
 
-// Get the book list available in the shop CALLBACKS PROMISES
-public_users.get('/', function (req, res) {
-    //Write your code here
-    let getBooksPromise = new Promise((resolve, reject) => {
-        setTimeout(() => {
-            resolve("Promise getBooksPromise resolved")
-        }, 1000)
-    })
-    getBooksPromise.then((successMessage) => {
-        return res.status(200).json({
-            type: "success",
-            data: books,
-            message: "List of all books from callback"
-        });
-    })
+function bookList(){
+  return new Promise((resolve,reject)=>{resolve(books);})
+}
+
+public_users.get('/',function (req, res) {
+  bookList().then(
+    (data)=>res.send(JSON.stringify(data)),
+    (error) => res.send("The is an error")
+  );  
 });
 
 
@@ -79,30 +73,22 @@ public_users.get('/1isbn/:isbn', function (req, res) {
     });
 });
 
-// Get book details based on ISBN CALLBACK PROMISES
-public_users.get('/isbn/:isbn', function (req, res) {
-    booksWithISBN = [];
-    //Write your code here
-    //return res.status(300).json({message: "Yet to be implemented"});
-    Object.entries(books).map(([key, value]) => {
-        if (value["isbn"] && value["isbn"] == req.params.isbn) {
-            booksWithISBN.push(value)
-        }
-    })
-    
-    let getBooksBasedOnISBNPromise = new Promise((resolve, reject) => {
-        setTimeout(() => {
-            resolve("Promise getBooksBasedOnISBNPromise resolved")
-        }, 1000)
-    })
-    getBooksBasedOnISBNPromise.then((successMessage) => {
-        return res.status(200).json({
-            type: "success",
-            data: booksWithISBN,
-            message: "Getting book details by ISBN FROM CALLBACKS"
-        });
-    })
-});
+function bookBasedOnISBN(isbn){
+  let bookSearched = books[isbn];  
+  return new Promise((resolve,reject)=>{
+    if (bookSearched) {
+      resolve(bookSearched);
+    }else{
+      reject("there is an error looking the book!");
+    }    
+  })
+}
+
+// Get book details based on ISBN
+public_users.get('/isbn/:isbn',function (req, res) {
+  const isbn = req.params.isbn;
+  bookBasedOnISBN(isbn).then((data)=>res.send(JSON.stringify(data)),(error) => res.send('There is an error looking the book by ISBN'))
+ });
 
 // Get book details based on author
 public_users.get('/1author/:author', function (req, res) {
@@ -120,30 +106,23 @@ public_users.get('/1author/:author', function (req, res) {
         message: "Getting books based on author"
     });
 });
-// Get book details based on author
-public_users.get('/author/:author', function (req, res) {
-    booksBasedOnAuthor = [];
-    //Write your code here
-    //return res.status(300).json({ message: "Yet to be implemented" });
-    Object.entries(books).map(([key, value]) => {
-        if (value["author"] && value["author"] == req.params.author) {
-            booksBasedOnAuthor.push(value)
-        }
-    })
-    
+function booksBasedOnAuthor(author){
+  let lastData = [];
+  return new Promise((resolve,reject)=>{
+    for (let isbn in books) {
+      let book = books[isbn];
+      if (book.author === author){
+        lastData.push(book);
+      }
+    }
+    resolve(lastData);  
+  })
+}
 
-    let getBooksBasedOnAuthorPromise = new Promise((resolve, reject) => {
-        setTimeout(() => {
-            resolve("Promise getBooksBasedOnAuthorPromise resolved")
-        }, 1000)
-    })
-    getBooksBasedOnAuthorPromise.then((successMessage) => {
-        return res.status(200).json({
-            type: "success",
-            data: booksBasedOnAuthor,
-            message: "Getting books based on author FROM CALLBACKS"
-        });
-    })
+// Get book details based on author
+public_users.get('/author/:author',function (req, res) {
+  const author = req.params.author;
+  booksBasedOnAuthor(author).then(data =>res.send(JSON.stringify(data)));
 });
 
 // Get all books based on title
@@ -162,29 +141,24 @@ public_users.get('1/title/:title', function (req, res) {
         message: "Getting book by title"
     });
 });
+function bookBasedOnTitle(title){
+  let lastData = [];
+  return new Promise((resolve,reject)=>{
+    for (let isbn in books) {
+      let book = books[isbn];
+      if (book.title === title){
+        lastData.push(book_);
+      }
+    }
+    resolve(lastData);  
+  })
+}
+
 // Get all books based on title
-public_users.get('/title/:title', function (req, res) {
-    booksByTitle = [];
-    //Write your code here
-    //return res.status(300).json({message: "Yet to be implemented"});
-    Object.entries(books).map(([key, value]) => {
-        if (value["title"] && value["title"] == req.params.title) {
-            booksByTitle.push(value)
-        }
-    })
-    
-    let getBooksBasedOnTitlePromise = new Promise((resolve, reject) => {
-        setTimeout(() => {
-            resolve("Promise getBooksBasedOnTitlePromise resolved")
-        }, 1000)
-    })
-    getBooksBasedOnTitlePromise.then((successMessage) => {
-        return res.status(200).json({
-            type: "success",
-            data: booksByTitle,
-            message: "Getting book by title FROM CALLBACKS"
-        });
-    })
+public_users.get('/title/:title',function (req, res) {
+  const title = req.params.title;
+  bookBasedOnTitle(title)
+  .then(data =>res.send(JSON.stringify(data)));
 });
 
 //  Get book review
@@ -205,5 +179,6 @@ public_users.get('/review/:isbn', function (req, res) {
         message: "Getting reviews of the book byt ISBN"
     });
 });
+
 
 module.exports.general = public_users;
